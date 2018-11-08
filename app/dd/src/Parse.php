@@ -285,31 +285,32 @@ trait Parse
      */
     public function asyncDns($fd, $header, $clientSocket)
     {
-        if ($header[0] == DdConfig::ADDRTYPE_HOST) {
+        if ($this->toHeader[0] == DdConfig::ADDRTYPE_HOST) {
 
-            swoole_async_dns_lookup($header[1], function ($host, $ip) use ($header, $clientSocket, $fd) {
+            swoole_async_dns_lookup($this->toHeader[1], function ($host, $ip) use ($header, $clientSocket, $fd) {
                 $server_port = $this->clientList[$fd]['info']['server_port'];
-//                    $ota = $header[4] ? 'OTA' : '';
-//                    Log::cmd(
-//                        "TCP {$ota} connecting {$host}:{$header[2]} from {$remote_ip}:{$remote_port} server port:{$server_port} @line:" . __LINE__
-//                    );
+                $ota = $header[4] ? 'OTA' : '';
+                Log::cmd(
+                    " TCP OTA {$ota} connecting {$host}:{$header[2]} from $host, $ip @line:" . __LINE__
+                );
 
                 if ($ip && 0 < $header[2] && $server_port) {
-                    $clientSocket->connect($ip, $header[2]);
+                    $this->target_client_handle->connect($ip, $header[2]);
                 }
                 $this->clientList[$fd]['stage'] = DdConfig::STAGE_CONNECTING;
                 Log::cmd("reqPort:{$server_port} - ip:{$ip}:{$header[2]} @line:" . __LINE__);
             });
 
-        } elseif ($header[0] == DdConfig::ADDRTYPE_IPV4) {
+        } elseif ($this->toHeader[0] == DdConfig::ADDRTYPE_IPV4) {
             $ota = $header[4] ? 'OTA' : '';
-//                Log::cmd(
-//                    "TCP {$ota} connecting {$header[1]}:{$header[2]} from {$remote_ip}:{$remote_port} server port:{$server_port} @Line:" . __LINE__
-//                );
-            $clientSocket->connect($header[1], $header[2]);
-            $this->clientList[$fd]['stage'] = DdConfig::STAGE_CONNECTING;
+            $json = json_encode($header);
+            Log::cmd(
+                " TCP OTA {$ota} connecting:{$json} @line:" . __LINE__
+            );
+            $this->target_client_handle->connect($this->toHeader[1], $this->toHeader[2]);
+            $this->clientList[$this->toFd]['stage'] = DdConfig::STAGE_CONNECTING;
         } else {
-            Log::cmd(" Dns Parsing failure {$fd} @Line:" . __LINE__);
+            Log::cmd(" Dns Parsing failure {$this->toFd} @Line:" . __LINE__);
         }
     }
 
