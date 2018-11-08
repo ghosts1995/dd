@@ -175,7 +175,7 @@ trait Parse
 
     public function asyncClientReceive(swoole_client $target_server_handle, $pushData)
     {
-        Log::cmd("===========================asyncClientReceive=======================================");
+//        Log::cmd("===========================asyncClientReceive=======================================");
         if (empty($this->clientList) && empty($this->toFd)) {
             Log::cmd("=============toServClose============");
             Log::cmd("fd {$this->toFd} asyncClientReceive error clientList in null @line" . __LINE__);

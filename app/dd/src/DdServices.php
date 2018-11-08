@@ -120,8 +120,7 @@ class DdServices extends TcpServer
             unset($this->clientList[$fd]);
         }
         //关闭通道的日志,包含用户使用
-//        Log::cmd("server {$fd} closed memory_get_usage:" . memory_get_usage());
-        Log::cmd("@@@@@@@@@@@@@@@@@@server {$fd} closed @@@@@@@@@@@@@@@@@@@@");
+        Log::cmd("@@@@@@@@@@@@@@@@@@fd {$fd} closed @@@@@@@@@@@@@@@@@@@@");
     }
 
     /**
@@ -132,7 +131,6 @@ class DdServices extends TcpServer
     public function onConnect($serv, $fd)
     {
         $clientsInfo = $serv->connection_info($fd);
-
         //打开链接通道信息
         Log::cmd("================ new clinet ip={$clientsInfo['remote_ip']}:{$clientsInfo['remote_port']}===============");
         Log::cmd("onConnect info ReactorThreadID:{$clientsInfo['reactor_id']} \n\r 
@@ -242,8 +240,9 @@ class DdServices extends TcpServer
                     Log::cmd("If the header error is resolved, the connection is closed. @Line" . __LINE__);
                     return $serv->close($fd);
                 }
-
-                $this->doTcpPush($serv, $fd, $from_id, $data, $header);
+                go(function () use ($serv, $fd, $from_id, $data, $header) {
+                    $this->doTcpPush($serv, $fd, $from_id, $data, $header);
+                });
                 break;
 
             case DdConfig::STAGE_CONNECTING:
