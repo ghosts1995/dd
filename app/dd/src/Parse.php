@@ -176,9 +176,8 @@ trait Parse
     public function asyncClientReceive(swoole_client $target_server_handle, $pushData)
     {
         Log::cmd("===========================asyncClientReceive=======================================");
-        Log::cmd("===========================asyncClientReceive=======================================");
-        Log::cmd("===========================asyncClientReceive=======================================");
         if (empty($this->clientList) && empty($this->toFd)) {
+            Log::cmd("=============toServClose============");
             Log::cmd("fd {$this->toFd} asyncClientReceive error clientList in null @line" . __LINE__);
             $this->toServClose();
         }
@@ -212,14 +211,6 @@ trait Parse
             Log::cmd("fd {$this->toFd} Exception asyncClientReceive error encryptor @line" . __LINE__);
             $this->toServClose();
         }
-
-//        try {
-//
-//
-//        } catch (\Exception $e) {
-//            Log::cmd("fd {$this->toFd} Exception asyncClientReceive error encryptor @line" . __LINE__);
-//            $this->toServClose();
-//        }
     }
 
 
@@ -297,13 +288,17 @@ trait Parse
      */
     public function asyncDns()
     {
+
+        Log::cmd("===========================asyncDns=======================================");
+        print_r($this->toHeader);
+
         if ($this->toHeader[0] == DdConfig::ADDRTYPE_HOST) {
             swoole_async_dns_lookup($this->toHeader[1], function ($host, $ip) {
                 $server_port = $this->clientList[$this->toFd]['info']['server_port'];
-                $ota = $this->toHeader[4] ? 'OTA' : '';
-                Log::cmd(
-                    " TCP OTA {$ota} connecting {$host}:{$this->toHeader[2]} from $host, $ip @line:" . __LINE__
-                );
+//                $ota = $this->toHeader[4] ? 'OTA' : '';
+//                Log::cmd(
+//                    " TCP OTA {$ota} connecting {$host}:{$this->toHeader[2]} from $host, $ip @line:" . __LINE__
+//                );
 
                 if ($ip && 0 < $this->toHeader[2] && $server_port) {
                     $this->target_client_handle->connect($ip, $this->toHeader[2]);
@@ -313,11 +308,11 @@ trait Parse
             });
 
         } elseif ($this->toHeader[0] == DdConfig::ADDRTYPE_IPV4) {
-            $ota = $this->toHeader[4] ? 'OTA' : '';
-            $json = json_encode($this->toHeader);
-            Log::cmd(
-                " TCP OTA {$ota} connecting:{$json} @line:" . __LINE__
-            );
+//            $ota = $this->toHeader[4] ? 'OTA' : '';
+//            $json = json_encode($this->toHeader);
+//            Log::cmd(
+//                " TCP OTA {$ota} connecting:{$json} @line:" . __LINE__
+//            );
             $this->target_client_handle->connect($this->toHeader[1], $this->toHeader[2]);
             $this->clientList[$this->toFd]['stage'] = DdConfig::STAGE_CONNECTING;
         } else {
