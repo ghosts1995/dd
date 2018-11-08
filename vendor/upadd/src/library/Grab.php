@@ -113,12 +113,12 @@ class Grab extends Debug
                     echo '</pre>';
                 } else {
                     $json = json_encode($error);
-                    $time = date();
+                    $time = date('Y-m-d H:i:s', time());
                     echo "[{$time}] Grab:{$json}  @LINE" . __LINE__ . PHP_EOL;
                 }
             }
         }
     }
 
-    
+
 }
