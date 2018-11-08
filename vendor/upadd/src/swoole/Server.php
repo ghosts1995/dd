@@ -139,7 +139,8 @@ abstract class Server
 
     public function onWorkerError(swoole_server $_server, $worker_id, $worker_pid, $exit_code)
     {
-        var_dump($this->name . " Worker Error", array($_server, $worker_id, $worker_pid, $exit_code));
+        //array($_server, $worker_id, $worker_pid, $exit_code)
+        var_dump($this->name . " Worker Error");
     }
 
     /**
