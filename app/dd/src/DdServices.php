@@ -135,7 +135,15 @@ class DdServices extends TcpServer
 
         //打开链接通道信息
         Log::cmd("================ new clinet ip={$clientsInfo['remote_ip']}:{$clientsInfo['remote_port']}===============");
-        Log::cmd("onConnect Info:Reactor线程ID={$clientsInfo['reactor_id']} - socket监听端口={$clientsInfo['server_fd']} - 服务端监听端口={$clientsInfo['server_port']} -  客户端连接的端口={$clientsInfo['remote_port']} - 客户端连接的IP地址={$clientsInfo['remote_ip']} - 客户端连接到Server的时间={$clientsInfo['connect_time']} - 最后一次收到数据的时间={$clientsInfo['last_time']}");
+        Log::cmd("onConnect info ReactorThreadID:{$clientsInfo['reactor_id']} \n\r 
+            socketPort={$clientsInfo['server_fd']} \n\r 
+            server monitor port: {$clientsInfo['server_port']} \n\r  
+            clinet port: {$clientsInfo['remote_port']} \n\r 
+            clinet ip: {$clientsInfo['remote_ip']} \n\r 
+            the client connect server time: {$clientsInfo['connect_time']} \n\r 
+            Last time received data: {$clientsInfo['last_time']}"
+        );
+
         $server_port = $clientsInfo['server_port'];
         //判断通信端口是否正确
         if (array_key_exists($server_port, $this->startTcpServer)) {
@@ -231,7 +239,7 @@ class DdServices extends TcpServer
                 $header = Help::socket5Header($data, $this->ota_enable);
                 // 解析头部出错，则关闭连接
                 if (!$header) {
-                    Log::cmd("If the header error is resolved, the connection is closed. @Line". __LINE__);
+                    Log::cmd("If the header error is resolved, the connection is closed. @Line" . __LINE__);
                     return $serv->close($fd);
                 }
 

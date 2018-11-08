@@ -136,6 +136,10 @@ trait Parse
 
     public function asyncClientConnect(swoole_client $target_server_handle)
     {
+        Log::cmd($this->target_client_handle->isConnected()); // true
+        Log::cmd($this->target_client_handle->getsockname()); //['port' => 57305, 'host'=> '127.0.0.1']
+        Log::cmd($this->target_client_handle->sock); // 5
+
         $this->clientList[$this->toFd]['clientSocket'] = $this->target_client_handle;
         // shadowsocks客户端第一次发来的数据超过头部，则要把头部后面的数据发给远程服务端
         if (strlen($this->toData) > $this->toHeader_len) {
