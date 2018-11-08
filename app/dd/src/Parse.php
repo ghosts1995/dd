@@ -305,20 +305,23 @@ trait Parse
 
             $clientSocket->on('receive', function (swoole_client $cli, $pushData) use ($fd, $header, $serv)
             {
-                $pushData = $this->clientList[$fd]['encryptor']->encrypt($pushData);
-                if (isset($this->clientList[$fd]['overflowed']) && $this->clientList[$fd]['overflowed'] == false) {
-
-                    $res = $serv->send($fd, $pushData);
-                    if (!$res) {
-                        $errCode = $serv->getLastError();
-                        if (1008 == $errCode) {
-                            //The cache is full.
+                if(isset($this->clientList[$fd]['encryptor'])){
+                    $pushData = $this->clientList[$fd]['encryptor']->encrypt($pushData);
+                    if (isset($this->clientList[$fd]['overflowed']) && $this->clientList[$fd]['overflowed'] == false) {
+                        $res = $serv->send($fd, $pushData);
+                        if (!$res) {
+                            $errCode = $serv->getLastError();
+                            if (1008 == $errCode) {
+                                //The cache is full.
+                            } else {
+                                Log::cmd("send uncatched errCode:$errCode");
+                            }
                         } else {
-                            Log::cmd("send uncatched errCode:$errCode");
+                            //统计
                         }
-                    } else {
-                        //统计
                     }
+                }else{
+                    Log::cmd("receive error this->clientList[fd]['encryptor'] ");
                 }
             });
 
