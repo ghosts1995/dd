@@ -123,10 +123,10 @@ trait Parse
                 $this->target_client_handle->set($proxy);
             }
         }
-        $this->_target_client_handle->on('Connect', array($this, 'asyncClientConnect'));
-        $this->_target_client_handle->on('Error', array($this, 'asyncClientError'));
-        $this->_target_client_handle->on('Close', array($this, 'asyncClientClose'));
-        $this->_target_client_handle->on('Receive', array($this, 'asyncClientReceive'));
+        $this->target_client_handle->on('Connect', array($this, 'asyncClientConnect'));
+        $this->target_client_handle->on('Error', array($this, 'asyncClientError'));
+        $this->target_client_handle->on('Close', array($this, 'asyncClientClose'));
+        $this->target_client_handle->on('Receive', array($this, 'asyncClientReceive'));
     }
 
     public function toServClose()
