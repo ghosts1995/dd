@@ -10,7 +10,7 @@ return [
     'dd_server' => [
         'timeout' => 20,
 //        'reactor_num' => 6,
-        'worker_num' => 12,
+        'worker_num' => 10,
         'max_request' => 0,
         'backlog' => 128,
         'dispatch_mode' => 2,

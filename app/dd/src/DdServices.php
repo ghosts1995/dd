@@ -117,8 +117,6 @@ class DdServices extends TcpServer
         }
         //关闭通道的日志,包含用户使用
         Log::cmd("@@@@@@@@@@@@@@@@@@fd {$fd} closed @@@@@@@@@@@@@@@@@@@@");
-
-        
     }
 
     /**
@@ -188,8 +186,6 @@ class DdServices extends TcpServer
         $fd = $param['fd'];
         $from_id = $param['from_id'];
         $data = $param['results'];
-//        $connection_info = $client;
-
         if (array_key_exists($fd, $this->clientList) == false) {
             Log::cmd("onReceive error connect {$fd}");
             $this->server->close($fd, true);

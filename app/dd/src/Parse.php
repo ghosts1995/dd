@@ -131,7 +131,7 @@ trait Parse
 
     public function toServClose()
     {
-        $this->toServ->close($this->toFd,true);
+        $this->toServ->close($this->toFd, true);
     }
 
     public function asyncClientConnect(swoole_client $target_server_handle)
@@ -218,26 +218,16 @@ trait Parse
      */
     public function doTcpPush($serv, $fd, $from_id, $data, $header)
     {
-
         //头部长度
         $header_len = $header[3];
         $this->clientList[$fd]['ota_enable'] = $header[4];
 
-        /*
-         * asyncClient init
-         */
-        $this->toServ = $serv;
-        $this->toFd = $fd;
-        $this->toFrom_id = $from_id;
-        $this->toData = $data;
-        $this->toHeader = $header;
-
         //头部OTA判断
-        if ($this->clientList[$this->toFd]['ota_enable']) {
+        if ($this->clientList[$fd]['ota_enable']) {
 
             if (strlen($data) < ($header_len + DdConfig::ONETIMEAUTH_BYTES)) {
                 Log::cmd("TCP OTA header is too short server");
-                return $this->toServClose();
+                return $serv->close($fd, true);
             }
 
             //$offset	= $header_len + ONETIMEAUTH_BYTES;
@@ -251,158 +241,117 @@ trait Parse
             $gen = Help::hashAuthGen($pushData, $key);
             if ($gen != $_hash) {
                 Log::cmd(" TCP OTA header fail.");
-                return $this->toServClose();
+                return $serv->close($fd, true);
             }
             $header_len += DdConfig::ONETIMEAUTH_BYTES;
             //数据部分OTA判断
             //$data = substr($data,$header_len);
         }
 
-        $this->toHeader_len = $header_len;
-
         /**
-         * 判断客户端信息 $this->clientList[$this->toFd]['clientSocket']
+         * 判断客户端信息
          */
-        if (array_key_exists($this->toFd, $this->clientList)) {
-            if (array_key_exists('clientSocket', $this->clientList[$this->toFd]) == false) {
-                $this->clientList[$this->toFd]['stage'] = DdConfig::STAGE_CONNECTING;
-                $this->asyncClient();
-                $this->asyncDns($this->toFd, $this->toHeader, $this->target_client_handle);
-            } else {
-                Log::cmd(" ============= \r\n ============= \r\n ============= \r\n " . __LINE__);
-            }
-        } else {
-            Log::cmd("Lack {$this->toFd} @LINE" . __LINE__);
+        if (!array_key_exists($fd, $this->clientList)) {
+            Log::cmd("Lack {$fd} @LINE" . __LINE__);
         }
+
+        if (array_key_exists('clientSocket', $this->clientList[$fd]) == false) {
+            $this->clientList[$fd]['stage'] = DdConfig::STAGE_CONNECTING;
+            $clientSocket = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
+            $clientSocket->closing = false;
+
+            if ($this->is_socketPorxy) {
+                $proxy = Help::getProxy();
+                if ($proxy) {
+                    $clientSocket->set($proxy);
+                }
+            }
+
+            $clientSocket->on('connect', function (swoole_client $cli) use ($data, $fd, $header_len)
+            {
+                $this->clientList[$fd]['clientSocket'] = $cli;
+                // shadowsocks客户端第一次发来的数据超过头部，则要把头部后面的数据发给远程服务端
+                if (strlen($data) > $header_len) {
+                    $this->writeToSock($fd, substr($data, $header_len));
+                }
+
+                $count = isset($this->clientList[$fd]['splQueue']) ? count($this->clientList[$fd]['splQueue']) : 0;
+                for ($i = 0; $i < $count; $i++) {//读取队列
+                    $v = $this->clientList[$fd]['splQueue']->shift();
+                    $this->writeToSock($fd, $v);
+                }
+                $this->clientList[$fd]['stage'] = DdConfig::STAGE_STREAM;
+            });
+
+            $clientSocket->on('error', function (swoole_client $cli) use ($fd, $serv)
+            {
+                $serv->close($fd,true);
+            });
+
+
+            $clientSocket->on('close', function (swoole_client $cli) use ($fd, $serv)
+            {
+                if (!$cli->closing) {
+                    $cli->closing = true;
+                    $serv->close($fd, true);
+                }
+
+                if (isset($this->clientList[$fd])) {
+                    unset($this->clientList[$fd]);
+                }
+                Log::cmd("client {$fd} closed memory_get_usage:" . memory_get_usage());
+            });
+
+
+            $clientSocket->on('receive', function (swoole_client $cli, $pushData) use ($fd, $header, $serv)
+            {
+                $pushData = $this->clientList[$fd]['encryptor']->encrypt($pushData);
+                if (isset($this->clientList[$fd]['overflowed']) && $this->clientList[$fd]['overflowed'] == false) {
+
+                    $res = $serv->send($fd, $pushData);
+                    if (!$res) {
+                        $errCode = $serv->getLastError();
+                        if (1008 == $errCode) {
+                            //The cache is full.
+                        } else {
+                            Log::cmd("send uncatched errCode:$errCode");
+                        }
+                    } else {
+                        //统计
+                    }
+                }
+            });
+
+            $this->asyncDns($fd, $header, $clientSocket);
+        } else {
+            Log::cmd(" ============= \r\n ============= \r\n ============= \r\n " . __LINE__);
+        }
+
     }
 
 
     /**
      * Asynchronous DNS parsing
      */
-    public function asyncDns()
+    public function asyncDns($fd, $header, $cli)
     {
-
 //        Log::cmd("===========================asyncDns=======================================");
 //        print_r($this->toHeader);
-
-        if ($this->toHeader[0] == DdConfig::ADDRTYPE_HOST) {
-            swoole_async_dns_lookup($this->toHeader[1], function ($host, $ip) {
-                $server_port = $this->clientList[$this->toFd]['info']['server_port'];
-//                $ota = $this->toHeader[4] ? 'OTA' : '';
-//                Log::cmd(
-//                    " TCP OTA {$ota} connecting {$host}:{$this->toHeader[2]} from $host, $ip @line:" . __LINE__
-//                );
-
-                if ($ip && 0 < $this->toHeader[2] && $server_port) {
-                    $this->target_client_handle->connect($ip, $this->toHeader[2]);
+        if ($header[0] == DdConfig::ADDRTYPE_HOST) {
+            swoole_async_dns_lookup($header[1], function ($host, $ip) use ($fd, $header, $cli) {
+                $server_port = $this->clientList[$fd]['info']['server_port'];
+                if ($ip && 0 < $header[2] && $server_port) {
+                    $cli->connect($ip, $header[2]);
                 }
-                $this->clientList[$this->toFd]['stage'] = DdConfig::STAGE_CONNECTING;
-                Log::cmd("reqPort:{$server_port} - ip:{$ip}:{$this->toHeader[2]} @line:" . __LINE__);
+                $this->clientList[$fd]['stage'] = DdConfig::STAGE_CONNECTING;
+                Log::cmd("reqPort:{$server_port} - ip:{$ip}:{$header[2]} @line:" . __LINE__);
             });
-
-        } elseif ($this->toHeader[0] == DdConfig::ADDRTYPE_IPV4) {
-//            $ota = $this->toHeader[4] ? 'OTA' : '';
-//            $json = json_encode($this->toHeader);
-//            Log::cmd(
-//                " TCP OTA {$ota} connecting:{$json} @line:" . __LINE__
-//            );
-            $this->target_client_handle->connect($this->toHeader[1], $this->toHeader[2]);
-            $this->clientList[$this->toFd]['stage'] = DdConfig::STAGE_CONNECTING;
+        } elseif ($header[0] == DdConfig::ADDRTYPE_IPV4) {
+            $cli->connect($header[1], $header[2]);
+            $this->clientList[$fd]['stage'] = DdConfig::STAGE_CONNECTING;
         } else {
-            Log::cmd(" Dns Parsing failure {$this->toFd} @Line:" . __LINE__);
+            Log::cmd(" Dns Parsing failure {$fd} @Line:" . __LINE__);
         }
     }
 
-
 }
-
-
-
-//            go(function () use ($fd, $data, $header, $header_len, $serv) {
-
-
-/*
-                //连接到后台服务器
-                $clientSocket = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
-                $clientSocket->closing = false;
-
-                //設置代理池
-                if ($this->is_socketPorxy) {
-                    $proxy = Help::getProxy();
-//                    print_r($proxy);
-                    if ($proxy) {
-                        $clientSocket->set($proxy);
-                    }
-                }
-
-                $clientSocket->on('connect', function (swoole_client $cli) use ($data, $fd, $header_len) {
-                    $this->clientList[$fd]['clientSocket'] = $cli;
-                    // shadowsocks客户端第一次发来的数据超过头部，则要把头部后面的数据发给远程服务端
-                    if (strlen($data) > $header_len) {
-                        $this->writeToSock($fd, substr($data, $header_len));
-                    }
-
-                    $count = isset($this->clientList[$fd]['splQueue']) ? count($this->clientList[$fd]['splQueue']) : 0;
-                    for ($i = 0; $i < $count; $i++) {//读取队列
-                        $v = $this->clientList[$fd]['splQueue']->shift();
-                        $this->writeToSock($fd, $v);
-                    }
-                    $this->clientList[$fd]['stage'] = DdConfig::STAGE_STREAM;
-                });
-
-                $clientSocket->on('error', function (swoole_client $cli) use ($fd, $serv) {
-                    $serv->close($fd);
-                });
-
-
-                $clientSocket->on('close', function (swoole_client $cli) use ($fd, $serv) {
-                    if (!$cli->closing) {
-                        $cli->closing = true;
-                        $serv->close($fd);
-                    }
-
-                    if (isset($this->clientList[$fd])) {
-                        unset($this->clientList[$fd]);
-                    }
-                    Log::cmd("client {$fd} closed memory_get_usage:" . memory_get_usage());
-                });
-
-
-                $clientSocket->on('receive', function (swoole_client $cli, $pushData) use ($fd, $header, $serv) {
-
-                    $pushData = $this->clientList[$fd]['encryptor']->encrypt($pushData);
-
-                    if (isset($this->clientList[$fd]['overflowed']) && $this->clientList[$fd]['overflowed'] == false) {
-
-                        $res = $serv->send($fd, $pushData);
-                        if ($res) {
-
-                            if ($pushData && $header) {
-//                                $this->traffic->is_visit = true;
-//                                //todo Traffic statistics
-//                                $this->traffic->clinetData = $pushData;
-//                                $this->traffic->clientInfo['info'] = json_encode($header);
-//                                $this->traffic->clientInfo['data'] = json_encode($pushData);
-//                                //Start up calculation statistics
-//                                $this->traffic->main();
-                            }
-
-                        } else {
-                            $errCode = $serv->getLastError();
-                            if (1008 == $errCode) {
-                                //The cache is full.
-                            } else {
-                                Log::cmd("send uncatched errCode:$errCode");
-                            }
-                        }
-                    }
-
-                });
-*/
-/**
- * Asynchronous DNS parsing
- */
-//                $this->asyncDns($fd, $header, $this->target_client_handle);
-
-//            });//end go()
