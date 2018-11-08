@@ -102,13 +102,13 @@ trait Parse
     /**
      * @var
      */
-    private $toServ;
-    private $toFd;
-    private $toFrom_id;
-    private $toData;
-    private $toHeader;
-    private $toHeader_len;
-    private $target_client_handle;
+    public $toServ;
+    public $toFd;
+    public $toFrom_id;
+    public $toData;
+    public $toHeader;
+    public $toHeader_len;
+    public $target_client_handle;
 
     /**
      *
@@ -123,10 +123,10 @@ trait Parse
                 $this->target_client_handle->set($proxy);
             }
         }
-        $this->_target_client_handle->on('connect', array($this, 'asyncClientConnect'));
-        $this->_target_client_handle->on('error', array($this, 'asyncClientError'));
-        $this->_target_client_handle->on('close', array($this, 'asyncClientClose'));
-        $this->_target_client_handle->on('receive', array($this, 'asyncClientReceive'));
+        $this->_target_client_handle->on('Connect', array($this, 'asyncClientConnect'));
+        $this->_target_client_handle->on('Error', array($this, 'asyncClientError'));
+        $this->_target_client_handle->on('Close', array($this, 'asyncClientClose'));
+        $this->_target_client_handle->on('Receive', array($this, 'asyncClientReceive'));
     }
 
     public function toServClose()
