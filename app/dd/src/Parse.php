@@ -175,11 +175,14 @@ trait Parse
 
     public function asyncClientReceive(swoole_client $target_server_handle, $pushData)
     {
+        if (count($this->clientList) == 0 && !count($this->clientList && empty($this->toFd))) {
+            Log::cmd("fd {$this->toFd} asyncClientReceive error clientList in null @line" . __LINE__);
+            $this->toServClose();
+        }
+        
         if (array_key_exists('encryptor', $this->clientList[$this->toFd])) {
             $pushData = $this->clientList[$this->toFd]['encryptor']->encrypt($pushData);
-
             if (isset($this->clientList[$this->toFd]['overflowed']) && $this->clientList[$this->toFd]['overflowed'] == false) {
-
                 $res = $this->toServ->send($this->toFd, $pushData);
                 if ($res) {
 
@@ -205,6 +208,8 @@ trait Parse
         } else {
             Log::cmd("fd {$this->toFd} asyncClientReceive error encryptor @line" . __LINE__);
         }
+
+
     }
 
 

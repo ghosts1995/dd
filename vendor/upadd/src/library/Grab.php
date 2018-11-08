@@ -60,7 +60,7 @@ class Grab extends Debug
                 $body .= "Info:\n" . json($error[4]) . "\n";
             }
             $body .= "---\n";
-            
+
             echo $body;
         }
     }
