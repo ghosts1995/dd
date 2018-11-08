@@ -28,7 +28,7 @@ class Log
         $data = $this->setContent($content);
         echo '[' . $now . '] ' . $data . PHP_EOL;
     }
-
+    
     /**
      * 全局笔记
      * @param array $cont
@@ -71,9 +71,15 @@ class Log
      */
     public function request($cont, $fileName = 'request.log')
     {
-        $cont['url'] = self::getHttpUrl();
-        $cont['time'] = date('Y-m-d H:i:s');
-        $content = json($cont) . ",\r";
+        $data = [];
+        if (is_array($cont)) {
+            $data = array_merge($cont, $data);
+        }else{
+            $data['content'] = $cont;
+        }
+        $data['url'] = self::getHttpUrl();
+        $data['time'] = date('Y-m-d H:i:s');
+        $content = json_encode($cont) . ",\r";
         $file = self::isBak($fileName);
         self::addContent($file, $content);
     }
@@ -109,7 +115,7 @@ class Log
     {
         $data = '';
         if (is_array($content)) {
-            $data = json_decode($content);
+            $data = json_encode($content);
         } elseif (is_string($content)) {
             $data = $content;
         }
