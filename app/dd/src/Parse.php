@@ -275,7 +275,7 @@ trait Parse
             Log::cmd("Lack {$this->toFd} @LINE" . __LINE__);
         }
     }
-    
+
 
     /**
      * Asynchronous DNS parsing
