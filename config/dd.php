@@ -3,7 +3,7 @@ return [
 
 
     //是否为守护进程
-    'daemonize' => false,
+    'daemonize' => true,
 
     ########################server
 

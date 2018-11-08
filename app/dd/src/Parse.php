@@ -175,13 +175,6 @@ trait Parse
 
     public function asyncClientReceive(swoole_client $target_server_handle, $pushData)
     {
-//        Log::cmd("===========================asyncClientReceive=======================================");
-        if (empty($this->clientList) && empty($this->toFd)) {
-            Log::cmd("=============toServClose============");
-            Log::cmd("fd {$this->toFd} asyncClientReceive error clientList in null @line" . __LINE__);
-            $this->toServClose();
-        }
-
         if (isset($this->clientList[$this->toFd])) {
             $pushData = $this->clientList[$this->toFd]['encryptor']->encrypt($pushData);
             if (isset($this->clientList[$this->toFd]['overflowed']) && $this->clientList[$this->toFd]['overflowed'] == false) {
