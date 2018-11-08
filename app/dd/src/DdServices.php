@@ -132,20 +132,20 @@ class DdServices extends TcpServer
     {
         $clientsInfo = $serv->connection_info($fd);
         //打开链接通道信息
-        Log::cmd("================ \n\r
-            fd={$fd} \n\r
-            new clinet ip={$clientsInfo['remote_ip']} \n\r 
-            port: {$clientsInfo['remote_port']} \n\r 
-        ===============");
-
-        Log::cmd("onConnect info ReactorThreadID:{$clientsInfo['reactor_id']} \n\r 
-            socketPort={$clientsInfo['server_fd']} \n\r 
-            server monitor port: {$clientsInfo['server_port']} \n\r  
-            clinet port: {$clientsInfo['remote_port']} \n\r 
-            clinet ip: {$clientsInfo['remote_ip']} \n\r 
-            the client connect server time: {$clientsInfo['connect_time']} \n\r 
-            Last time received data: {$clientsInfo['last_time']}"
-        );
+//        Log::cmd("================ \n\r
+//            fd={$fd} \n\r
+//            new clinet ip={$clientsInfo['remote_ip']} \n\r
+//            port: {$clientsInfo['remote_port']} \n\r
+//        ===============");
+//
+//        Log::cmd("onConnect info ReactorThreadID:{$clientsInfo['reactor_id']} \n\r
+//            socketPort={$clientsInfo['server_fd']} \n\r
+//            server monitor port: {$clientsInfo['server_port']} \n\r
+//            clinet port: {$clientsInfo['remote_port']} \n\r
+//            clinet ip: {$clientsInfo['remote_ip']} \n\r
+//            the client connect server time: {$clientsInfo['connect_time']} \n\r
+//            Last time received data: {$clientsInfo['last_time']}"
+//        );
 
         $server_port = $clientsInfo['server_port'];
         //判断通信端口是否正确

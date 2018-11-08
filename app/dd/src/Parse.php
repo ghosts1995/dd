@@ -131,7 +131,7 @@ trait Parse
 
     public function toServClose()
     {
-        $this->toServ->close($this->toFd);
+        $this->toServ->close($this->toFd,true);
     }
 
     public function asyncClientConnect(swoole_client $target_server_handle)
@@ -209,7 +209,7 @@ trait Parse
             }
         } else {
             Log::cmd("fd {$this->toFd} Exception asyncClientReceive error encryptor @line" . __LINE__);
-            print_r($this->toHeader);
+//            print_r($this->toHeader);
             $this->toServClose();
         }
     }
