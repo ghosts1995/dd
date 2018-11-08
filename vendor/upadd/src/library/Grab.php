@@ -3,6 +3,7 @@
 namespace Upadd\Bin;
 
 use Config;
+use function PHPSTORM_META\type;
 use Upadd\Bin\Tool\Log;
 
 class Grab extends Debug
@@ -112,9 +113,10 @@ class Grab extends Debug
                     print_r($error);
                     echo '</pre>';
                 } else {
+                    $type = gettype($error);
                     $json = json_encode($error);
                     $time = date('Y-m-d H:i:s', time());
-                    echo "[{$time}] Grab:{$json}  @LINE" . __LINE__ . PHP_EOL;
+                    echo "[{$time}] type:{$type} Grab:\n\r {$json} \n\r @LINE" . __LINE__ . PHP_EOL;
                 }
             }
         }
