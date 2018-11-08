@@ -213,7 +213,7 @@ trait Parse
             $this->toServClose();
         }
     }
-    
+
 
     /**
      * @param $serv
@@ -290,8 +290,8 @@ trait Parse
     public function asyncDns()
     {
 
-        Log::cmd("===========================asyncDns=======================================");
-        print_r($this->toHeader);
+//        Log::cmd("===========================asyncDns=======================================");
+//        print_r($this->toHeader);
 
         if ($this->toHeader[0] == DdConfig::ADDRTYPE_HOST) {
             swoole_async_dns_lookup($this->toHeader[1], function ($host, $ip) {
