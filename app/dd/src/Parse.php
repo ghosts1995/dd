@@ -178,17 +178,11 @@ trait Parse
         Log::cmd("===========================asyncClientReceive=======================================");
         Log::cmd("===========================asyncClientReceive=======================================");
         Log::cmd("===========================asyncClientReceive=======================================");
-
-
         if (empty($this->clientList) && empty($this->toFd)) {
             Log::cmd("fd {$this->toFd} asyncClientReceive error clientList in null @line" . __LINE__);
             $this->toServClose();
         }
 
-        $test['typeClientList'] = gettype($this->clientList);
-        $test['typeClientListFD'] = gettype($this->clientList[$this->toFd]);
-        $test['toFd'] = gettype($this->toFd);
-        print_r($test);
         if (isset($this->clientList[$this->toFd])) {
             $pushData = $this->clientList[$this->toFd]['encryptor']->encrypt($pushData);
             if (isset($this->clientList[$this->toFd]['overflowed']) && $this->clientList[$this->toFd]['overflowed'] == false) {
@@ -218,7 +212,7 @@ trait Parse
             Log::cmd("fd {$this->toFd} Exception asyncClientReceive error encryptor @line" . __LINE__);
             $this->toServClose();
         }
-        
+
 //        try {
 //
 //
