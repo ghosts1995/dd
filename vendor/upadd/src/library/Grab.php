@@ -112,7 +112,8 @@ class Grab extends Debug
                     print_r($error);
                     echo '</pre>';
                 } else {
-                    echo json_encode($error);
+                    $json = json_encode($error);
+                   Log::cmd("Grab:{$json}  @LINE" . __LINE__);
                 }
             }
         }

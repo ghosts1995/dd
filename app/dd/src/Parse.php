@@ -279,31 +279,27 @@ trait Parse
 
     /**
      * Asynchronous DNS parsing
-     * @param $fd
-     * @param $header
-     * @param $clientSocket
      */
-    public function asyncDns($fd, $header, $clientSocket)
+    public function asyncDns()
     {
         if ($this->toHeader[0] == DdConfig::ADDRTYPE_HOST) {
-
-            swoole_async_dns_lookup($this->toHeader[1], function ($host, $ip) use ($header, $clientSocket, $fd) {
-                $server_port = $this->clientList[$fd]['info']['server_port'];
-                $ota = $header[4] ? 'OTA' : '';
+            swoole_async_dns_lookup($this->toHeader[1], function ($host, $ip) {
+                $server_port = $this->clientList[$this->toFd]['info']['server_port'];
+                $ota = $this->toHeader[4] ? 'OTA' : '';
                 Log::cmd(
-                    " TCP OTA {$ota} connecting {$host}:{$header[2]} from $host, $ip @line:" . __LINE__
+                    " TCP OTA {$ota} connecting {$host}:{$this->toHeader[2]} from $host, $ip @line:" . __LINE__
                 );
 
-                if ($ip && 0 < $header[2] && $server_port) {
-                    $this->target_client_handle->connect($ip, $header[2]);
+                if ($ip && 0 < $this->toHeader[2] && $server_port) {
+                    $this->target_client_handle->connect($ip, $this->toHeader[2]);
                 }
-                $this->clientList[$fd]['stage'] = DdConfig::STAGE_CONNECTING;
-                Log::cmd("reqPort:{$server_port} - ip:{$ip}:{$header[2]} @line:" . __LINE__);
+                $this->clientList[$this->toFd]['stage'] = DdConfig::STAGE_CONNECTING;
+                Log::cmd("reqPort:{$server_port} - ip:{$ip}:{$this->toHeader[2]} @line:" . __LINE__);
             });
 
         } elseif ($this->toHeader[0] == DdConfig::ADDRTYPE_IPV4) {
-            $ota = $header[4] ? 'OTA' : '';
-            $json = json_encode($header);
+            $ota = $this->toHeader[4] ? 'OTA' : '';
+            $json = json_encode($this->toHeader);
             Log::cmd(
                 " TCP OTA {$ota} connecting:{$json} @line:" . __LINE__
             );
