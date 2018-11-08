@@ -53,9 +53,9 @@ class Grab extends Debug
         }
         $body .= "---\n";
         Log::run($body);
-        self::__print($error);
+        self::__print($error,"setError");
     }
-
+    
     /**
      * 全局异常
      * @param $e
@@ -70,7 +70,7 @@ class Grab extends Debug
             'previous' => $e->getPrevious(),
         ];
         Log::run($error);
-        self::__print($error);
+        self::__print($error,"setGlobalException");
     }
 
 
@@ -97,14 +97,14 @@ class Grab extends Debug
         $endtime .= 'End Run Time consuming ' . round($time, 3) . ' second';
         $endtime .= "\r\n" . "======\n\r";
         Log::run($endtime);
-        self::__print($error);
+        self::__print($error,"setExit");
     }
 
     /**
      * 打印错误或是异常
      * @param array $error
      */
-    private static function __print($error = [])
+    private static function __print($error = [],$type)
     {
         if (Config::get('error@debug')) {
             if ($error) {
@@ -114,10 +114,7 @@ class Grab extends Debug
                     echo '</pre>';
                 } else {
                     $time = date('Y-m-d H:i:s', time());
-                    echo "msg: {$error['msg']} \r\n" ;
-                    echo "file: {$error['file']} \r\n" ;
-                    echo "line: {$error['line']} \r\n" ;
-                    echo "[{$time}] Grab  @LINE" . __LINE__;
+                    echo "[{$time}] error Type {$type} Grab  @LINE " . __LINE__;
                 }
             }
         }
