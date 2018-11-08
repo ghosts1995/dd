@@ -15,6 +15,7 @@ use Swoole\Http\Server as swoole_http_server;
 use Config;
 use Upadd\Swoole\Lib\Help;
 use Upadd\Bin\UpaddException;
+use Log;
 
 abstract class Server
 {
@@ -100,7 +101,9 @@ abstract class Server
     /**
      * @return mixed
      */
-    protected function doListen(){}
+    protected function doListen()
+    {
+    }
 
 
     /**
@@ -110,7 +113,7 @@ abstract class Server
     public function onStart(swoole_server $_server)
     {
         swoole_set_process_name($this->name . " Master");
-        echo "Start\n";
+        Log::cmd("pid:{$this->pid} {$this->name} Start type:{$this->type} ip:{$this->host} port:{$this->port} ");
     }
 
     public function onManagerStart(swoole_server $_server)
@@ -120,7 +123,7 @@ abstract class Server
 
     public function onManagerStop(swoole_server $_server)
     {
-        echo "Manager Stop , shutdown server\n";
+        Log::cmd("Manager Stop , shutdown server");
         $_server->shutdown();
     }
 
@@ -140,7 +143,7 @@ abstract class Server
     public function onWorkerError(swoole_server $_server, $worker_id, $worker_pid, $exit_code)
     {
         //array($_server, $worker_id, $worker_pid, $exit_code)
-        var_dump($this->name . " Worker Error");
+        Log::cmd($this->name . " Worker Error");
     }
 
     /**
@@ -150,9 +153,9 @@ abstract class Server
      */
     public function onWorkerStop(swoole_server $_server, $worker_id)
     {
-        var_dump(sprintf('Server %s Worker[ #%s ] is shutdown', $this->name, $worker_id));
+        Log::cmd(sprintf('Server %s Worker[ #%s ] is shutdown', $this->name, $worker_id));
     }
-
+    
 
     /**
      * 对外创建
