@@ -112,7 +112,7 @@ class Grab extends Debug
                     print_r($error);
                     echo '</pre>';
                 } else {
-                    print_r($error);
+                    echo json_encode($error);
                 }
             }
         }
