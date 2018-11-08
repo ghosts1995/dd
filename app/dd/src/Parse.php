@@ -207,12 +207,13 @@ trait Parse
                     }
                 }
             }
-        }else{
+        } else {
             Log::cmd("fd {$this->toFd} Exception asyncClientReceive error encryptor @line" . __LINE__);
+            print_r($this->toHeader);
             $this->toServClose();
         }
     }
-
+    
 
     /**
      * @param $serv
