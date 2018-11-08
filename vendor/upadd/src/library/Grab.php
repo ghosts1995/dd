@@ -116,7 +116,8 @@ class Grab extends Debug
                     $type = gettype($error);
                     $json = json_encode($error);
                     $time = date('Y-m-d H:i:s', time());
-                    echo "[{$time}] type:{$type} Grab:\n\r {$json} \n\r @LINE" . __LINE__;
+                    echo "[{$time}] type:{$type} Grab:\n {$json} \n @LINE" . __LINE__;
+                    print_r($error);
                 }
             }
         }
