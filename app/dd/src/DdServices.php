@@ -132,7 +132,12 @@ class DdServices extends TcpServer
     {
         $clientsInfo = $serv->connection_info($fd);
         //打开链接通道信息
-        Log::cmd("================ new clinet ip={$clientsInfo['remote_ip']}:{$clientsInfo['remote_port']}===============");
+        Log::cmd("================ \n\r
+            fd={$fd} \n\r
+            new clinet ip={$clientsInfo['remote_ip']} \n\r 
+            port: {$clientsInfo['remote_port']} \n\r 
+        ===============");
+
         Log::cmd("onConnect info ReactorThreadID:{$clientsInfo['reactor_id']} \n\r 
             socketPort={$clientsInfo['server_fd']} \n\r 
             server monitor port: {$clientsInfo['server_port']} \n\r  
@@ -214,7 +219,11 @@ class DdServices extends TcpServer
 
             // 先解密数据
             $data = $this->clientList[$fd]['encryptor']->decrypt($data);
-            $this->pushClinet($this->server, $fd, $from_id, $data);
+//            $this->pushClinet($this->server, $fd, $from_id, $data);
+            $server = $this->server;
+            go(function () use ($server,$fd, $from_id, $data) {
+                $this->pushClinet($server, $fd, $from_id, $data);
+            });
         }
     }
 
@@ -240,9 +249,8 @@ class DdServices extends TcpServer
                     Log::cmd("If the header error is resolved, the connection is closed. @Line" . __LINE__);
                     return $serv->close($fd);
                 }
-                go(function () use ($serv, $fd, $from_id, $data, $header) {
-                    $this->doTcpPush($serv, $fd, $from_id, $data, $header);
-                });
+
+                $this->doTcpPush($serv, $fd, $from_id, $data, $header);
                 break;
 
             case DdConfig::STAGE_CONNECTING:
