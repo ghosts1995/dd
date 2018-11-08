@@ -136,9 +136,9 @@ trait Parse
 
     public function asyncClientConnect(swoole_client $target_server_handle)
     {
-        Log::cmd($this->target_client_handle->isConnected()); // true
-        Log::cmd($this->target_client_handle->getsockname()); //['port' => 57305, 'host'=> '127.0.0.1']
-        Log::cmd($this->target_client_handle->sock); // 5
+//        Log::cmd($this->target_client_handle->isConnected()); // true
+//        Log::cmd($this->target_client_handle->getsockname()); //['port' => 57305, 'host'=> '127.0.0.1']
+//        Log::cmd($this->target_client_handle->sock); // 5
 
         $this->clientList[$this->toFd]['clientSocket'] = $this->target_client_handle;
         // shadowsocks客户端第一次发来的数据超过头部，则要把头部后面的数据发给远程服务端
@@ -173,16 +173,18 @@ trait Parse
         Log::cmd("asyncClientClose {$this->toFd} closed memory_get_usage:" . memory_get_usage());
     }
 
+
     public function asyncClientReceive(swoole_client $target_server_handle, $pushData)
     {
-        $pushData = $this->clientList[$this->toFd]['encryptor']->encrypt($pushData);
+        if (array_key_exists('encryptor', $this->clientList[$this->toFd])) {
+            $pushData = $this->clientList[$this->toFd]['encryptor']->encrypt($pushData);
 
-        if (isset($this->clientList[$this->toFd]['overflowed']) && $this->clientList[$this->toFd]['overflowed'] == false) {
+            if (isset($this->clientList[$this->toFd]['overflowed']) && $this->clientList[$this->toFd]['overflowed'] == false) {
 
-            $res = $this->toServ->send($this->toFd, $pushData);
-            if ($res) {
+                $res = $this->toServ->send($this->toFd, $pushData);
+                if ($res) {
 
-                if ($pushData && $this->toHeader) {
+                    if ($pushData && $this->toHeader) {
 //                                $this->traffic->is_visit = true;
 //                                //todo Traffic statistics
 //                                $this->traffic->clinetData = $pushData;
@@ -190,20 +192,23 @@ trait Parse
 //                                $this->traffic->clientInfo['data'] = json_encode($pushData);
 //                                //Start up calculation statistics
 //                                $this->traffic->main();
-                }
+                    }
 
-            } else {
-                $errCode = $this->toServ->getLastError();
-                if (1008 == $errCode) {
-                    //The cache is full.
                 } else {
-                    Log::cmd("send uncatched errCode:$errCode");
+                    $errCode = $this->toServ->getLastError();
+                    if (1008 == $errCode) {
+                        //The cache is full.
+                    } else {
+                        Log::cmd("send uncatched errCode:$errCode");
+                    }
                 }
             }
+        } else {
+            Log::cmd("fd {$this->toFd} asyncClientReceive error encryptor @line" . __LINE__);
         }
     }
 
-
+    
     /**
      * @param $serv
      * @param $fd
@@ -219,7 +224,6 @@ trait Parse
         $header_len = $header[3];
         $this->clientList[$fd]['ota_enable'] = $header[4];
 
-
         /*
          * asyncClient init
          */
@@ -228,7 +232,6 @@ trait Parse
         $this->toFrom_id = $from_id;
         $this->toData = $data;
         $this->toHeader = $header;
-
 
         //头部OTA判断
         if ($this->clientList[$fd]['ota_enable']) {
@@ -268,84 +271,84 @@ trait Parse
                 $this->clientList[$fd]['stage'] = DdConfig::STAGE_CONNECTING;
                 $this->asyncClient();
 
-/*
-                //连接到后台服务器
-                $clientSocket = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
-                $clientSocket->closing = false;
+                /*
+                                //连接到后台服务器
+                                $clientSocket = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
+                                $clientSocket->closing = false;
 
-                //設置代理池
-                if ($this->is_socketPorxy) {
-                    $proxy = Help::getProxy();
-//                    print_r($proxy);
-                    if ($proxy) {
-                        $clientSocket->set($proxy);
-                    }
-                }
+                                //設置代理池
+                                if ($this->is_socketPorxy) {
+                                    $proxy = Help::getProxy();
+                //                    print_r($proxy);
+                                    if ($proxy) {
+                                        $clientSocket->set($proxy);
+                                    }
+                                }
 
-                $clientSocket->on('connect', function (swoole_client $cli) use ($data, $fd, $header_len) {
-                    $this->clientList[$fd]['clientSocket'] = $cli;
-                    // shadowsocks客户端第一次发来的数据超过头部，则要把头部后面的数据发给远程服务端
-                    if (strlen($data) > $header_len) {
-                        $this->writeToSock($fd, substr($data, $header_len));
-                    }
+                                $clientSocket->on('connect', function (swoole_client $cli) use ($data, $fd, $header_len) {
+                                    $this->clientList[$fd]['clientSocket'] = $cli;
+                                    // shadowsocks客户端第一次发来的数据超过头部，则要把头部后面的数据发给远程服务端
+                                    if (strlen($data) > $header_len) {
+                                        $this->writeToSock($fd, substr($data, $header_len));
+                                    }
 
-                    $count = isset($this->clientList[$fd]['splQueue']) ? count($this->clientList[$fd]['splQueue']) : 0;
-                    for ($i = 0; $i < $count; $i++) {//读取队列
-                        $v = $this->clientList[$fd]['splQueue']->shift();
-                        $this->writeToSock($fd, $v);
-                    }
-                    $this->clientList[$fd]['stage'] = DdConfig::STAGE_STREAM;
-                });
+                                    $count = isset($this->clientList[$fd]['splQueue']) ? count($this->clientList[$fd]['splQueue']) : 0;
+                                    for ($i = 0; $i < $count; $i++) {//读取队列
+                                        $v = $this->clientList[$fd]['splQueue']->shift();
+                                        $this->writeToSock($fd, $v);
+                                    }
+                                    $this->clientList[$fd]['stage'] = DdConfig::STAGE_STREAM;
+                                });
 
-                $clientSocket->on('error', function (swoole_client $cli) use ($fd, $serv) {
-                    $serv->close($fd);
-                });
-
-
-                $clientSocket->on('close', function (swoole_client $cli) use ($fd, $serv) {
-                    if (!$cli->closing) {
-                        $cli->closing = true;
-                        $serv->close($fd);
-                    }
-
-                    if (isset($this->clientList[$fd])) {
-                        unset($this->clientList[$fd]);
-                    }
-                    Log::cmd("client {$fd} closed memory_get_usage:" . memory_get_usage());
-                });
+                                $clientSocket->on('error', function (swoole_client $cli) use ($fd, $serv) {
+                                    $serv->close($fd);
+                                });
 
 
-                $clientSocket->on('receive', function (swoole_client $cli, $pushData) use ($fd, $header, $serv) {
+                                $clientSocket->on('close', function (swoole_client $cli) use ($fd, $serv) {
+                                    if (!$cli->closing) {
+                                        $cli->closing = true;
+                                        $serv->close($fd);
+                                    }
 
-                    $pushData = $this->clientList[$fd]['encryptor']->encrypt($pushData);
+                                    if (isset($this->clientList[$fd])) {
+                                        unset($this->clientList[$fd]);
+                                    }
+                                    Log::cmd("client {$fd} closed memory_get_usage:" . memory_get_usage());
+                                });
 
-                    if (isset($this->clientList[$fd]['overflowed']) && $this->clientList[$fd]['overflowed'] == false) {
 
-                        $res = $serv->send($fd, $pushData);
-                        if ($res) {
+                                $clientSocket->on('receive', function (swoole_client $cli, $pushData) use ($fd, $header, $serv) {
 
-                            if ($pushData && $header) {
-//                                $this->traffic->is_visit = true;
-//                                //todo Traffic statistics
-//                                $this->traffic->clinetData = $pushData;
-//                                $this->traffic->clientInfo['info'] = json_encode($header);
-//                                $this->traffic->clientInfo['data'] = json_encode($pushData);
-//                                //Start up calculation statistics
-//                                $this->traffic->main();
-                            }
+                                    $pushData = $this->clientList[$fd]['encryptor']->encrypt($pushData);
 
-                        } else {
-                            $errCode = $serv->getLastError();
-                            if (1008 == $errCode) {
-                                //The cache is full.
-                            } else {
-                                Log::cmd("send uncatched errCode:$errCode");
-                            }
-                        }
-                    }
+                                    if (isset($this->clientList[$fd]['overflowed']) && $this->clientList[$fd]['overflowed'] == false) {
 
-                });
-*/
+                                        $res = $serv->send($fd, $pushData);
+                                        if ($res) {
+
+                                            if ($pushData && $header) {
+                //                                $this->traffic->is_visit = true;
+                //                                //todo Traffic statistics
+                //                                $this->traffic->clinetData = $pushData;
+                //                                $this->traffic->clientInfo['info'] = json_encode($header);
+                //                                $this->traffic->clientInfo['data'] = json_encode($pushData);
+                //                                //Start up calculation statistics
+                //                                $this->traffic->main();
+                                            }
+
+                                        } else {
+                                            $errCode = $serv->getLastError();
+                                            if (1008 == $errCode) {
+                                                //The cache is full.
+                                            } else {
+                                                Log::cmd("send uncatched errCode:$errCode");
+                                            }
+                                        }
+                                    }
+
+                                });
+                */
                 /**
                  * Asynchronous DNS parsing
                  */

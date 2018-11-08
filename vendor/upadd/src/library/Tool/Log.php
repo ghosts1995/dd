@@ -28,7 +28,7 @@ class Log
         $data = $this->setContent($content);
         echo '[' . $now . '] ' . $data . PHP_EOL;
     }
-    
+
     /**
      * 全局笔记
      * @param array $cont
