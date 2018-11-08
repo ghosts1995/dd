@@ -179,12 +179,11 @@ trait Parse
         Log::cmd("===========================asyncClientReceive=======================================");
         Log::cmd("===========================asyncClientReceive=======================================");
 
-        if (count($this->clientList) == 0 && !count($this->clientList && empty($this->toFd))) {
+        if (empty($this->clientList ) && empty($this->toFd)) {
             Log::cmd("fd {$this->toFd} asyncClientReceive error clientList in null @line" . __LINE__);
             $this->toServClose();
         }
-
-
+        
         $test['typeClientList'] = gettype($this->clientList);
         $test['typeClientListFD'] = gettype($this->clientList[$this->toFd]);
         $test['toFd'] = gettype($this->toFd);
