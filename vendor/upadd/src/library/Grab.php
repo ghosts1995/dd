@@ -55,7 +55,7 @@ class Grab extends Debug
         Log::run($body);
         self::__print($error,"setError");
     }
-    
+
     /**
      * 全局异常
      * @param $e
@@ -114,7 +114,7 @@ class Grab extends Debug
                     echo '</pre>';
                 } else {
                     $time = date('Y-m-d H:i:s', time());
-                    echo "[{$time}] error Type {$type} Grab  @LINE " . __LINE__;
+                    echo "[{$time}] error Type {$type} Grab ".PHP_EOL;
                 }
             }
         }
