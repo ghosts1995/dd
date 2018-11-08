@@ -117,8 +117,10 @@ class DdServices extends TcpServer
         }
         //关闭通道的日志,包含用户使用
         Log::cmd("@@@@@@@@@@@@@@@@@@fd {$fd} closed @@@@@@@@@@@@@@@@@@@@");
+
+        
     }
-    
+
     /**
      * 链接通道
      * @param $serv
