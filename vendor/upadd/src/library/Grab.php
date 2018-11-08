@@ -48,12 +48,21 @@ class Grab extends Debug
         $body .= "Msg:" . $error[1] . "\n";
         $body .= "File:" . $error[2] . "\n";
         $body .= "Line:" . $error[3] . "\n";
-        if ($error[4]) {
-            $body .= "Info:\n" . json($error[4]) . "\n";
+        if(is_run_evn()){
+            if ($error[4]) {
+                $body .= "Info:\n" . json($error[4]) . "\n";
+            }
+            $body .= "---\n";
+            Log::run($body);
+            self::__print($error,"setError");
+        }else{
+            if ($error[4]) {
+                $body .= "Info:\n" . json($error[4]) . "\n";
+            }
+            $body .= "---\n";
+            
+            echo $body;
         }
-        $body .= "---\n";
-        Log::run($body);
-        self::__print($error,"setError");
     }
 
     /**
