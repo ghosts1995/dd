@@ -3,7 +3,9 @@ return [
 
 
     //是否为守护进程
-    'daemonize' => true,
+    'daemonize' => false,
+
+    ########################server
 
     'dd_server' => [
         'timeout' => 60,
@@ -16,10 +18,19 @@ return [
     ],
 
 
+    /**
+     * server port in password
+     */
+    'serverConfig' => [
+        3131 => 'password'
+    ],
+
+    ########################localhost
+
     'dd_local' => [
-        'timeout' => 1,
+        'timeout' => 15,
         'poll_thread_num' => 1,
-        'worker_num' => 2,
+        'worker_num' => 4,
         'backlog' => 128,
         'dispatch_mode' => 2,
         'log_file' => host() . '/data/dd_local_swoole.logs',
@@ -28,18 +39,13 @@ return [
 
     'local_config' => [
         'local_address' => '0.0.0.0',
-        'local_port' => 1086,
+        'local_port' => 6666,
         'server' => '127.0.0.1',
         'server_port' => 3131,
         'password' => '123456',
         'method' => 'aes-256-cfb'
     ],
 
-    /**
-     * server port in password
-     */
-    'serverConfig' => [
-        3131 => 'password'
-    ],
+
 
 ];

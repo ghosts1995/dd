@@ -89,6 +89,7 @@ class DdServices extends TcpServer
         });
     }
 
+
     //缓冲区控制
     public function onBufferFull($serv, $fd)
     {
@@ -230,7 +231,7 @@ class DdServices extends TcpServer
                 $header = Help::socket5Header($data, $this->ota_enable);
                 // 解析头部出错，则关闭连接
                 if (!$header) {
-//                    Log::cmd("parse header error maybe wrong password {$remote_ip}:{$remote_port} server port:{$server_port}");
+                    Log::cmd("If the header error is resolved, the connection is closed. @Line". __LINE__);
                     return $serv->close($fd);
                 }
 

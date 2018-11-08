@@ -42,39 +42,23 @@ class DdAction extends \Upadd\Frame\Action
 
     /**
      * php console.php --u=dd --p=local
-     * php console.php --u=dd --p=local --server=111.33.18.67
+     * php console.php --u=dd --p=local --config=eyJzZXJ2ZXIiOiIxMDYuMTQuMTQ3LjE2OSIsInNlcnZlcl9wb3J0Ijo5MDAxLCJwYXNzd29yZCI6IiFAIUAjIzkwOTAiLCJsb2NhbF9wb3J0Ijo2NjZ9
      * @throws \Upadd\Bin\UpaddException
      */
     public function local()
     {
-        $localIP = Data::get('ip', 0);
-        $local_port = Data::get('local_port', 0);
-        $server = Data::get('server');
-        $server_port = Data::get('server_port', 0);
-        $password = Data::get('password', 0);
+        $conf = Data::get('config');
+        if ($conf != null) {
+            $conf = json(base64_decode($conf));
+        }
 
         //本地配置
-        $conf = Config::get('dd@local_config');
-        if ($password) {
-            $conf['password'] = $password;
+        $config = Config::get('dd@local_config');
+        if (is_array($conf) && !empty($conf)) {
+            $config = array_merge($config, $conf);
         }
-        if ($server_port) {
-            $conf['server_port'] = $server_port;
-        }
-
-        if ($server) {
-            $conf['server'] = $server;
-        }
-        if ($local_port) {
-            $conf['local_port'] = $local_port;
-        }
-
-        if ($localIP) {
-            $conf['local_address'] = $localIP;
-        }
-
         $local = DdLocaService::create('upadd_dd_local', 'tcp://0.0.0.0:6666');
-        $local->getConfig($conf);
+        $local->getConfig($config);
         $local->start();
     }
 
@@ -84,9 +68,21 @@ class DdAction extends \Upadd\Frame\Action
      */
     public function test()
     {
-        $conf = Config::get('dd@serverConfig');
+//        $conf = [
+//            'server' => '106.14.147.169',
+//            'server_port' => 9001,
+//            'password' => '!@!@##9090',
+//            'local_port' => 6666,
+//        ];
+//        $json = base64_encode(json($conf));
+//        echo "php console.php --u=dd --p=local --config={$json}" . "\n\r";
+
+        $conf = [
+            443=>'!@!@##9090',
+            80=>'!@!@##9191'
+        ];
         $json = base64_encode(json($conf));
-        echo $json;
+        echo "php console.php --u=dd --p=server --pp={$json}" . "\n\r";
     }
 
 

@@ -37,6 +37,9 @@ class getRedis
         $config = Config::get('cache@redis');
         $this->redis = new \Redis();
         $this->redis->connect($config['host'], $config['port']);
+        if ($config['auth']) {
+            $this->redis->auth($config['auth']);
+        }
     }
 
     /**
