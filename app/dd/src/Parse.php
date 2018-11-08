@@ -264,7 +264,7 @@ trait Parse
          * 判断客户端信息 $this->clientList[$this->toFd]['clientSocket']
          */
         if (array_key_exists($this->toFd, $this->clientList)) {
-            if (array_key_exists('clientSocket', $this->clientList[$this->toFd])) {
+            if (array_key_exists('clientSocket', $this->clientList[$this->toFd]) == false) {
                 $this->clientList[$this->toFd]['stage'] = DdConfig::STAGE_CONNECTING;
                 $this->asyncClient();
                 $this->asyncDns($this->toFd, $this->toHeader, $this->target_client_handle);
@@ -275,8 +275,8 @@ trait Parse
             Log::cmd("Lack {$this->toFd} @LINE" . __LINE__);
         }
     }
-
     
+
     /**
      * Asynchronous DNS parsing
      * @param $fd
