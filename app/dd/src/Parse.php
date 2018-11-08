@@ -269,7 +269,7 @@ trait Parse
                 $this->asyncClient();
                 $this->asyncDns($this->toFd, $this->toHeader, $this->target_client_handle);
             } else {
-                Log::cmd(" ============= \r\n ============= \r\n");
+                Log::cmd(" ============= \r\n ============= \r\n ============= \r\n " . __LINE__);
             }
         } else {
             Log::cmd("Lack {$this->toFd} @LINE" . __LINE__);
