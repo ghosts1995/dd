@@ -155,7 +155,7 @@ abstract class Server
     {
         Log::cmd(sprintf('Server %s Worker[ #%s ] is shutdown', $this->name, $worker_id));
     }
-    
+
 
     /**
      * 对外创建
@@ -177,11 +177,11 @@ abstract class Server
     {
         $this->name = $name;
 
-        $this->pid = host() . '/tmp/' . str_replace(' ', '-', $this->name) . '.pid';
+        $this->pid = '/tmp/' . str_replace(' ', '-', $this->name) . '.pid';
 
         return $this;
     }
-
+    
     /**
      * 如果需要自定义自己的swoole服务器,重写此方法
      * @return swoole_server
