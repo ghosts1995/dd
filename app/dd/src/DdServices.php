@@ -112,17 +112,13 @@ class DdServices extends TcpServer
     public function onClose($serv, $fd, $from_id)
     {
         //清理掉后端连接
-        if (isset($this->clientList[$fd]['clientSocket']) && $this->clientList[$fd]['clientSocket']->closing === false) {
-            $this->clientList[$fd]['clientSocket']->closing = true;
-            $this->clientList[$fd]['clientSocket']->close();
-        }
         if (isset($this->clientList[$fd])) {
             unset($this->clientList[$fd]);
         }
         //关闭通道的日志,包含用户使用
         Log::cmd("@@@@@@@@@@@@@@@@@@fd {$fd} closed @@@@@@@@@@@@@@@@@@@@");
     }
-
+    
     /**
      * 链接通道
      * @param $serv
