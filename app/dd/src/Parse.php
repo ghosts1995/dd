@@ -6,7 +6,8 @@ use Log;
 use app\dd\src\DdConfig;
 use app\dd\src\Help;
 
-use Swoole\Client as swoole_client;
+//use Swoole\Client as swoole_client;
+use Coroutine\Client as swoole_client;
 
 
 trait Parse
