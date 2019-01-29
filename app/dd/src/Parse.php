@@ -6,8 +6,8 @@ use Log;
 use app\dd\src\DdConfig;
 use app\dd\src\Help;
 
-//use Swoole\Client as swoole_client;
-use Swoole\Coroutine\Client as swoole_client;
+use Swoole\Client as swoole_client;
+//use Swoole\Coroutine\Client as swoole_client;
 
 
 trait Parse
@@ -99,116 +99,6 @@ trait Parse
         $this->is_socketPorxy = true;
     }
 
-
-    /**
-     * @var
-     */
-    public $toServ;
-    public $toFd;
-    public $toFrom_id;
-    public $toData;
-    public $toHeader;
-    public $toHeader_len;
-    public $target_client_handle;
-
-    /**
-     *
-     */
-    public function asyncClient()
-    {
-        $this->target_client_handle = new swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
-        $this->target_client_handle->closing = false;
-        if ($this->is_socketPorxy) {
-            $proxy = Help::getProxy();
-            if ($proxy) {
-                $this->target_client_handle->set($proxy);
-            }
-        }
-        $this->target_client_handle->on('Connect', array($this, 'asyncClientConnect'));
-        $this->target_client_handle->on('Error', array($this, 'asyncClientError'));
-        $this->target_client_handle->on('Close', array($this, 'asyncClientClose'));
-        $this->target_client_handle->on('Receive', array($this, 'asyncClientReceive'));
-    }
-
-    public function toServClose()
-    {
-        $this->toServ->close($this->toFd, true);
-    }
-
-    public function asyncClientConnect(swoole_client $target_server_handle)
-    {
-//        Log::cmd($this->target_client_handle->isConnected()); // true
-//        Log::cmd($this->target_client_handle->getsockname()); //['port' => 57305, 'host'=> '127.0.0.1']
-//        Log::cmd($this->target_client_handle->sock); // 5
-
-        $this->clientList[$this->toFd]['clientSocket'] = $this->target_client_handle;
-        // shadowsocks客户端第一次发来的数据超过头部，则要把头部后面的数据发给远程服务端
-        if (strlen($this->toData) > $this->toHeader_len) {
-            $this->writeToSock($this->toFd, substr($this->toData, $this->toHeader_len));
-        }
-
-        $count = isset($this->clientList[$this->toFd]['splQueue']) ? count($this->clientList[$this->toFd]['splQueue']) : 0;
-        for ($i = 0; $i < $count; $i++) {//读取队列
-            $v = $this->clientList[$this->toFd]['splQueue']->shift();
-            $this->writeToSock($this->toFd, $v);
-        }
-        $this->clientList[$this->toFd]['stage'] = DdConfig::STAGE_STREAM;
-    }
-
-    public function asyncClientError(swoole_client $target_server_handle)
-    {
-        $this->toServClose();
-        Log::cmd("asyncClientError:{$this->toFd} @LINE" . __LINE__);
-    }
-
-    public function asyncClientClose(swoole_client $target_server_handle)
-    {
-        if (!$this->target_client_handle->closing) {
-            $this->target_client_handle->closing = true;
-            $this->toServClose();
-        }
-
-        if (isset($this->clientList[$this->toFd])) {
-            unset($this->clientList[$this->toFd]);
-        }
-        Log::cmd("asyncClientClose {$this->toFd} closed memory_get_usage:" . memory_get_usage());
-    }
-
-    public function asyncClientReceive(swoole_client $target_server_handle, $pushData)
-    {
-        if (isset($this->clientList[$this->toFd])) {
-            $pushData = $this->clientList[$this->toFd]['encryptor']->encrypt($pushData);
-            if (isset($this->clientList[$this->toFd]['overflowed']) && $this->clientList[$this->toFd]['overflowed'] == false) {
-                $res = $this->toServ->send($this->toFd, $pushData);
-                if ($res) {
-
-                    if ($pushData && $this->toHeader) {
-//                                $this->traffic->is_visit = true;
-//                                //todo Traffic statistics
-//                                $this->traffic->clinetData = $pushData;
-//                                $this->traffic->clientInfo['info'] = json_encode($header);
-//                                $this->traffic->clientInfo['data'] = json_encode($pushData);
-//                                //Start up calculation statistics
-//                                $this->traffic->main();
-                    }
-
-                } else {
-                    $errCode = $this->toServ->getLastError();
-                    if (1008 == $errCode) {
-                        //The cache is full.
-                    } else {
-                        Log::cmd("send uncatched errCode:$errCode");
-                    }
-                }
-            }
-        } else {
-            Log::cmd("fd {$this->toFd} Exception asyncClientReceive error encryptor @line" . __LINE__);
-//            print_r($this->toHeader);
-            $this->toServClose();
-        }
-    }
-
-
     /**
      * @param $serv
      * @param $fd
@@ -274,7 +164,6 @@ trait Parse
                 if (strlen($data) > $header_len) {
                     $this->writeToSock($fd, substr($data, $header_len));
                 }
-
                 $count = isset($this->clientList[$fd]['splQueue']) ? count($this->clientList[$fd]['splQueue']) : 0;
                 for ($i = 0; $i < $count; $i++) {//读取队列
                     $v = $this->clientList[$fd]['splQueue']->shift();
@@ -320,6 +209,7 @@ trait Parse
                     Log::cmd("receive error this->clientList[fd]['encryptor'] ");
                 }
             });
+
 
             $this->asyncDns($fd, $header, $clientSocket);
         } else {
