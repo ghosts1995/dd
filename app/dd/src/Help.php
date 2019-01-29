@@ -60,6 +60,8 @@ class Help
         return $header . pack('n', $port);
     }
 
+
+
     /**
      * 解析shadowsocks客户端发来的socket5头部数据
      * @param $otaEnable
@@ -81,29 +83,35 @@ class Help
         }
 
         switch ($addr_type) {
+
             case DdConfig::ADDRTYPE_IPV4:
-                $dest_addr = ord($buffer[1]) . '.' . ord($buffer[2]) . '.' . ord($buffer[3]) . '.' . ord($buffer[4]);
-                $port_data = unpack('n', substr($buffer, 5, 2));
-                $dest_port = $port_data[1];
-                $header_length = 7;
+                    Log::cmd("ADDRTYPE_IPV4");
+                    $dest_addr = ord($buffer[1]) . '.' . ord($buffer[2]) . '.' . ord($buffer[3]) . '.' . ord($buffer[4]);
+                    $port_data = unpack('n', substr($buffer, 5, 2));
+                    $dest_port = $port_data[1];
+                    $header_length = 7;
                 break;
+
             case DdConfig::ADDRTYPE_HOST:
-                $addrlen = ord($buffer[1]);
-                $dest_addr = substr($buffer, 2, $addrlen);
-                $port_data = unpack('n', substr($buffer, 2 + $addrlen, 2));
-                $dest_port = $port_data[1];
-                $header_length = $addrlen + 4;
+                    Log::cmd("ADDRTYPE_HOST");
+                    $addrlen = ord($buffer[1]);
+                    $dest_addr = substr($buffer, 2, $addrlen);
+                    $port_data = unpack('n', substr($buffer, 2 + $addrlen, 2));
+                    $dest_port = $port_data[1];
+                    $header_length = $addrlen + 4;
                 break;
+
             case DdConfig::ADDRTYPE_IPV6:
-                Log::cmd("todo ipv6 not support yet");
+                    Log::cmd("@@@@@@@@@@IPV6 todo ipv6 not support yet@@@@@@@@@@@@@@@@@@");
                 break;
+
             default:
-                Log::cmd("unsupported addr type $addr_type");
+                    Log::cmd("unsupported addr type $addr_type");
                 break;
         }
         //将是否是 OTA 一并返回
         $header = [$addr_type, $dest_addr, $dest_port, $header_length, $ota_enable];
-        $json = json($header);
+//        $json = json($header);
 //        Log::cmd("header:{$json}");
         return $header;
     }

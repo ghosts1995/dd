@@ -18,7 +18,7 @@ class getRedis
     public function __construct($config = array())
     {
         if (!extension_loaded('Redis')) {
-            throw new UpaddException('Load Redis extension failure!');
+            throw new UpaddException('extension redis load failure!');
         }
 
         if ($this->redis !== null) {

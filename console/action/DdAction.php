@@ -57,7 +57,7 @@ class DdAction extends \Upadd\Frame\Action
         if (is_array($conf) && !empty($conf)) {
             $config = array_merge($config, $conf);
         }
-        $local = DdLocaService::create('upadd_dd_local', 'tcp://0.0.0.0:6666');
+        $local = DdLocaService::create('upadd_dd_local', 'tcp://127.0.0.1:6666');
         $local->getConfig($config);
         $local->start();
     }
@@ -68,21 +68,14 @@ class DdAction extends \Upadd\Frame\Action
      */
     public function test()
     {
-//        $conf = [
-//            'server' => '106.14.147.169',
-//            'server_port' => 9001,
-//            'password' => '!@!@##9090',
-//            'local_port' => 6666,
-//        ];
-//        $json = base64_encode(json($conf));
-//        echo "php console.php --u=dd --p=local --config={$json}" . "\n\r";
-
         $conf = [
-            443=>'!@!@##9090',
-            80=>'!@!@##9191'
+            'server' => '127.0.0.1',
+            'server_port' => 1099,
+            'password' => '123456',
+            'local_port' => 6666,
         ];
         $json = base64_encode(json($conf));
-        echo "php console.php --u=dd --p=server --pp={$json}" . "\n\r";
+        echo "php console.php --u=dd --p=local --config={$json}" . "\n\r";
     }
 
 

@@ -74,7 +74,7 @@ class Log
         $data = [];
         if (is_array($cont)) {
             $data = array_merge($cont, $data);
-        }else{
+        } else {
             $data['content'] = $cont;
         }
         $data['url'] = self::getHttpUrl();
@@ -103,7 +103,9 @@ class Log
      */
     private function time()
     {
-        return date('Y-m-d H:i:s', time());
+        $time = time();
+        $date = date('Y-m-d H:i:s', $time);
+        return ("{$date}->timeStamp:{$time}");
     }
 
 

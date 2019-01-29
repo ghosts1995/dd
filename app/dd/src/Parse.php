@@ -267,8 +267,7 @@ trait Parse
                 }
             }
 
-            $clientSocket->on('connect', function (swoole_client $cli) use ($data, $fd, $header_len)
-            {
+            $clientSocket->on('connect', function (swoole_client $cli) use ($data, $fd, $header_len) {
                 $this->clientList[$fd]['clientSocket'] = $cli;
                 // shadowsocks客户端第一次发来的数据超过头部，则要把头部后面的数据发给远程服务端
                 if (strlen($data) > $header_len) {
@@ -283,14 +282,11 @@ trait Parse
                 $this->clientList[$fd]['stage'] = DdConfig::STAGE_STREAM;
             });
 
-            $clientSocket->on('error', function (swoole_client $cli) use ($fd, $serv)
-            {
-                $serv->close($fd,true);
+            $clientSocket->on('error', function (swoole_client $cli) use ($fd, $serv) {
+                $serv->close($fd, true);
             });
 
-
-            $clientSocket->on('close', function (swoole_client $cli) use ($fd, $serv)
-            {
+            $clientSocket->on('close', function (swoole_client $cli) use ($fd, $serv) {
                 if (!$cli->closing) {
                     $cli->closing = true;
                     $serv->close($fd, true);
@@ -303,9 +299,8 @@ trait Parse
             });
 
 
-            $clientSocket->on('receive', function (swoole_client $cli, $pushData) use ($fd, $header, $serv)
-            {
-                if(isset($this->clientList[$fd]['encryptor'])){
+            $clientSocket->on('receive', function (swoole_client $cli, $pushData) use ($fd, $header, $serv) {
+                if (isset($this->clientList[$fd]['encryptor'])) {
                     $pushData = $this->clientList[$fd]['encryptor']->encrypt($pushData);
                     if (isset($this->clientList[$fd]['overflowed']) && $this->clientList[$fd]['overflowed'] == false) {
                         $res = $serv->send($fd, $pushData);
@@ -320,7 +315,7 @@ trait Parse
                             //统计
                         }
                     }
-                }else{
+                } else {
                     Log::cmd("receive error this->clientList[fd]['encryptor'] ");
                 }
             });
@@ -342,6 +337,7 @@ trait Parse
 //        print_r($this->toHeader);
         if ($header[0] == DdConfig::ADDRTYPE_HOST) {
             swoole_async_dns_lookup($header[1], function ($host, $ip) use ($fd, $header, $cli) {
+                print_r($header);
                 $server_port = $this->clientList[$fd]['info']['server_port'];
                 if ($ip && 0 < $header[2] && $server_port) {
                     $cli->connect($ip, $header[2]);

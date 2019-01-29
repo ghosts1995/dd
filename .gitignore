@@ -3,6 +3,7 @@
 .project
 .idea
 data
+config/api.php
 composer.lock
 *~
 .DS_Store

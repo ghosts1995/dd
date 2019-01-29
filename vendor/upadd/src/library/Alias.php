@@ -23,7 +23,7 @@ class Alias
         'Log' => 'Upadd\Bin\Package\Log',
         'Data' => 'Upadd\Bin\Package\Data',
         'Model' => 'Upadd\Frame\Model',
-        'Di'=>'Upadd\Bin\Package\Di',
+        //'Di'=>'Upadd\Bin\Package\Di',
 //            'Cache'=>'Upadd\Bin\Cache',
 //            'Async'=>'\Upadd\Bin\Async',
 //        'Tag' => 'Upadd\Bin\Package\Tag',
@@ -62,7 +62,7 @@ class Alias
         foreach ($this->aliasList() as $alias => $name) {
             $alias = class_alias($name, $alias);
             if (!$alias) {
-                throw new UpaddException($alias . '别名设置失败,' . '执行的路径:' . $name);
+                throw new UpaddException($alias . 'Alias settings failed,execution path:' . $name);
             }
         }
     }

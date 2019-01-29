@@ -68,6 +68,12 @@ abstract class Server
      */
     protected $pidFile = '';
 
+    private $serviceType = '';
+
+    /**
+     * @var array
+     */
+    protected $localInfo = [];
 
     /**
      * Server constructor.
@@ -85,10 +91,21 @@ abstract class Server
             $address = 'tcp://' . $this->host . ':' . $this->port;
         }
         $addressParam = Help::parseAddress($address);
+        if (isset($addressParam['scheme'])) {
+            $this->serviceType = strtoupper($addressParam['scheme']);
+        }
+
         $this->type = $addressParam['sock'];
         $this->host = $addressParam['host'];
         $this->port = $addressParam['port'];
         $this->config = array_merge($this->config, (array)$this->configure());
+        //设置本地信息
+        $this->localInfo = [
+            'serviceType' => $this->serviceType,
+            'host' => $this->host,
+            'port' => $this->port,
+            'config' => $this->config
+        ];
     }
 
 
@@ -113,7 +130,11 @@ abstract class Server
     public function onStart(swoole_server $_server)
     {
         swoole_set_process_name($this->name . " Master");
-        Log::cmd("pid:{$this->pid} {$this->name} Start type:{$this->type} ip:{$this->host} port:{$this->port} ");
+	Log::cmd("pid:{$this->pid} {$this->name} Start type:{$this->type} ip:{$this->host} port:{$this->port} ");
+        $this->localInfo['pid'] = $this->pid;
+        $this->localInfo['managerNmae'] = $this->name;
+        p($this->localInfo, true);
+        echo "Start\n";
     }
 
     public function onManagerStart(swoole_server $_server)
@@ -176,19 +197,21 @@ abstract class Server
     public function name($name)
     {
         $this->name = $name;
-
         $this->pid = '/tmp/' . str_replace(' ', '-', $this->name) . '.pid';
-
         return $this;
     }
-    
+
     /**
      * 如果需要自定义自己的swoole服务器,重写此方法
      * @return swoole_server
      */
     public function initServer()
     {
-        return new swoole_server($this->host, $this->port, SWOOLE_PROCESS, SWOOLE_SOCK_TCP);
+        if ($this->serviceType === 'UDP') {
+            return new swoole_server($this->host, $this->port, SWOOLE_PROCESS, SWOOLE_SOCK_UDP);
+        } else {
+            return new swoole_server($this->host, $this->port, SWOOLE_PROCESS, SWOOLE_SOCK_TCP);
+        }
     }
 
 
@@ -211,11 +234,11 @@ abstract class Server
     }
 
     /**
-     * 引导服务，当启动是接收到 swoole server 信息，则默认以这个swoole 服务进行引导
+     * 引导启动
      * @param swoole_server|swoole_server_port $swoole
      * @return $this
      */
-    public function bootstrap($swoole = null)
+    protected function bootstrap($swoole = null)
     {
         $this->server = null === $swoole ? $this->initServer() : $swoole;
         $this->doListen();
@@ -230,7 +253,6 @@ abstract class Server
         try {
             $this->bootstrap();
             $this->server->start();
-
         } catch (UpaddException $e) {
             throw new UpaddException($e->getMessage());
         }
