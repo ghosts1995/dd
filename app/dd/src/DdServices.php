@@ -216,9 +216,7 @@ class DdServices extends TcpServer
             $data = $this->clientList[$fd]['encryptor']->decrypt($data);
 //            $this->pushClinet($this->server, $fd, $from_id, $data);
             $server = $this->server;
-            go(function () use ($server,$fd, $from_id, $data) {
-                $this->pushClinet($server, $fd, $from_id, $data);
-            });
+            $this->pushClinet($server, $fd, $from_id, $data);
         }
     }
 
